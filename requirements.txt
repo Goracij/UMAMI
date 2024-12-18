@@ -14,7 +14,8 @@ h5py==3.11.0
 altair==5.0.1
 ipywidgets==8.0.6
 matplotlib==3.7.1
-numpy==1.24.3
+#numpy==1.24.3
+numpy==1.26.0
 jupyterlab-dash==0.1.0a3
 pytest==7.3.1
 missingno==0.5.2
@@ -25,8 +26,7 @@ gensim==4.3.1
 scipy==1.12.0
 #SQLAlchemy==2.0.15
 psycopg2-binary==2.9.7
-python-dotenv==1.0.0
-numba
+#python-dotenv
+#numba
 gpustat
-json
-pillow
+#json
