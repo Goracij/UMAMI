@@ -229,15 +229,19 @@ force_heatmap = st.sidebar.checkbox('Force GradCAM output.', value=False, key=No
 ############################################################################################
 #  MODELS SELECTION MENU (uncomment to try - model 2 error)
 ############################################################################################
-option_2 = st.sidebar.selectbox('Try out different models:',('Model 1', 'Model 2'), index=0)
+option_2 = st.sidebar.selectbox('Try out different models:',('Model 1', 'Model 2', 'Model 3'), index=0)
 match option_2:
     case 'Model 1':
-        LAYER_2 = './models/final/Nadine_food-101-EfNetB3-A0.__-earlystop-E__of45-B32_softCat_v1.1b.keras'
+        LAYER_2 = './models/final/Nadine_food-101-EfNetB3-A0.__-earlystop-E__of45-B32_softCat_RandPreprocLays_SEEDed_v1.1d.keras'
         LAYER_2_SIZE = (300,300)
 
     case 'Model 2': 
         LAYER_2 = './models/final/6_7_final_classification101_EfficientNet.keras'
         LAYER_2_SIZE = (224,224)
+    
+    case 'Model 3':
+        LAYER_2 = './models/final/Nadine_food-101-EfNetB3-A0.__-earlystop-E__of45-B32_softCat_v1.1b.keras'
+        LAYER_2_SIZE = (300,300)
 
 
 

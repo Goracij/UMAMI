@@ -76,9 +76,13 @@ SEED = 111
 TABLE = './data/food-101/Final_table_dish_info.csv'
 LOGO = './images/Umami_logo_vertical.png'
 
+TEXT_SIZE_1 = '20px'
+TEXT_SIZE_2 = '14px'
+TEXT_SIZE_BLOCK = '20px'
+TEXT_SIZE_ICONS = '20px'
 
+CACHED = True
 
-TEST_MODEL = './models/final/6_7_final_classification101_EfficientNet.keras'
 ############################################################################################
 # FUNCTIONS - https://www.analyticsvidhya.com/blog/2023/12/grad-cam-in-deep-learning/
 ############################################################################################
@@ -159,6 +163,8 @@ def load_layer_1_tree(path):
 @st.cache_resource
 def load_layer_2(path):
     model = tf.keras.models.load_model(path)
+    for layer in model.layers:
+        layer.trainable = False
     return model
 
 
@@ -229,32 +235,36 @@ force_heatmap = st.sidebar.checkbox('Force GradCAM output.', value=False, key=No
 ############################################################################################
 #  MODELS SELECTION MENU (uncomment to try - model 2 error)
 ############################################################################################
-option_2 = st.sidebar.selectbox('Try out different models:',('Model 1', 'Model 2'), index=0)
+option_2 = st.sidebar.selectbox('Try out different models:',('Model 1', 'Model 2', 'Model 3'), index=0)
 match option_2:
     case 'Model 1':
         LAYER_2 = './models/final/Nadine_food-101-EfNetB3-A0.__-earlystop-E__of45-B32_softCat_v1.1b.keras'
         LAYER_2_SIZE = (300,300)
-
     case 'Model 2': 
         LAYER_2 = './models/final/6_7_final_classification101_EfficientNet.keras'
-        LAYER_2_SIZE = (224,224)
+        LAYER_2_SIZE = (224,224)  
+    case 'Model 3':
+        LAYER_2 = './models/final/Nadine_food-101-EfNetB3-A0.__-earlystop-E__of45-B32_softCat_RandPreprocLays_SEEDed_v1.1d.keras'
+        LAYER_2_SIZE = (300,300)
 
+        
 
 
 ############################################################################################
 #  MODELS LOAD
 ############################################################################################
 
-# if you are using chaching functions
-layer_1_base = load_layer_1_base()
-layer_1_tree = load_layer_1_tree(TREE_MODEL)
-layer_2 = load_layer_2(LAYER_2)
+if CACHED:
+    layer_1_base = load_layer_1_base()
+    layer_1_tree = load_layer_1_tree(TREE_MODEL)
+    layer_2 = load_layer_2(LAYER_2)
 
-#if you are not caching
-#layer_1_base = tf.keras.applications.ResNet50(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
-#layer_1_tree = joblib.load(TREE_MODEL)
-#layer_2 = tf.keras.models.load_model(LAYER_2)
-
+else:
+    layer_1_base = tf.keras.applications.ResNet50(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
+    layer_1_tree = joblib.load(TREE_MODEL)
+    layer_2 = tf.keras.models.load_model(LAYER_2)
+    for layer in layer_2.layers:
+        layer.trainable = False
 
 ############################################################################################
 # 5.1 IMAGE LOAD
@@ -310,7 +320,7 @@ if (not camera_on) or (picture is not None):
         probable_cert = []
 
         if (l1_label=='Food'):
-            st.write(f"Well, it's a :green[**food**].")
+            st.markdown(f'<p style="color:Black; font-size: {TEXT_SIZE_1};">Well, it\'s a <b style="color:#50b432; font-size: {TEXT_SIZE_1};">Food</b></p>', unsafe_allow_html=True)
             ############################################################################################
             # IF FOOD - LAYER 2 PREDICTION
             ############################################################################################
@@ -318,26 +328,26 @@ if (not camera_on) or (picture is not None):
             l2_label = str(data_df.at[int(np.argmax(pred_l2, axis = -1)), 'dish_name'])
             l2_prob = pred_l2.max() * 100
             l2_label = str(l2_label).replace("['","").replace("']","").replace("_"," ").upper()
+            flags = data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']
+            certainty = str(l2_prob.round(2)) + '%'
             if (l2_prob.round(2) >=90):
-                st.write(f"I can bet it is :red[**{l2_label}**]! {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} \r Certainty {str(l2_prob.round(2))}%")
+                st.markdown(f'<p style="color:Black; font-size: {TEXT_SIZE_1};">I can bet it is <b style="color:Red; font-size: {TEXT_SIZE_1};">{l2_label}</b>!&ensp;{flags}</p>', unsafe_allow_html=True)
+                st.markdown(f'<p style="color:#b0b0b0; font-size: {TEXT_SIZE_2};">Certainty: {certainty}</p>', unsafe_allow_html=True)
             elif (l2_prob.round(2) < 90) and (l2_prob.round(2) >= 75):
-                st.write(f"I pretty much sure it is :red[**{l2_label}**]. {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} \r Certainty {str(l2_prob.round(2))}%")
+                st.markdown(f'<p style="color:Black; font-size: {TEXT_SIZE_1};">I pretty much sure it is <b style="color:Red; font-size: {TEXT_SIZE_1};">{l2_label}</b>!&ensp;{flags}</p>', unsafe_allow_html=True)
+                st.markdown(f'<p style="color:#b0b0b0; font-size: {TEXT_SIZE_2};">Certainty: {certainty}</p>', unsafe_allow_html=True)
             elif (l2_prob.round(2) <75) and (l2_prob.round(2) >=55):
-                st.write(f"I tend to believe it is :red[**{l2_label}**]. {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} \r Certainty {str(l2_prob.round(2))}%")
+                st.markdown(f'<p style="color:Black; font-size: {TEXT_SIZE_1};">I tend to believe it is <b style="color:Red; font-size: {TEXT_SIZE_1};">{l2_label}</b>.&ensp;{flags}</p>', unsafe_allow_html=True)
+                st.markdown(f'<p style="color:#b0b0b0; font-size: {TEXT_SIZE_2};">Certainty: {certainty}</p>', unsafe_allow_html=True)
             elif (l2_prob.round(2) <55) and (l2_prob.round(2) >=35):
-                st.write(f"I'd guess it is :red[**{l2_label}**]. {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} \r Certainty {str(l2_prob.round(2))}%")
+                st.markdown(f'<p style="color:Black; font-size: {TEXT_SIZE_1};">I\'d guess it is <b style="color:Red; font-size: {TEXT_SIZE_1};">{l2_label}</b>.&ensp;{flags}</p>', unsafe_allow_html=True)
+                st.markdown(f'<p style="color:#b0b0b0; font-size: {TEXT_SIZE_2};">Certainty: {certainty}</p>', unsafe_allow_html=True)
             elif (l2_prob.round(2) <35) and (l2_prob.round(2) >=15):
-                st.write(f"Oh, this one is tough! Perhaps, :red[**{l2_label}**]? {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} \r Certainty {str(l2_prob.round(2))}%")
+                st.markdown(f'<p style="color:Black; font-size: {TEXT_SIZE_1};">Oh, this one is tough! Perhaps, <b style="color:Red; font-size: {TEXT_SIZE_1};">{l2_label}</b>?&ensp;{flags}</p>', unsafe_allow_html=True)
+                st.markdown(f'<p style="color:#b0b0b0; font-size: {TEXT_SIZE_2};">Certainty: {certainty}</p>', unsafe_allow_html=True)
             else:
-                st.write(f"If I had to guess, I'd say it is :red[**{l2_label}**]. Are you sure you can eat THAT? {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} \r Certainty {str(l2_prob.round(2))}%")
-                st.markdown(
-                    f"""
-                    <div style="text-align: center; font-size: 28px; font-weight: bold; color: #2E8B57;">
-                        {l2_label} {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']}: {l2_prob.round(2):.2f}
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                    )
+                st.markdown(f'<p style="color:Black; font-size: {TEXT_SIZE_1};">If I had to guess, I\'d say it is <b style="color:Red; font-size: {TEXT_SIZE_1};">{l2_label}</b>...&ensp;{flags}</p>', unsafe_allow_html=True)
+                st.markdown(f'<p style="color:#b0b0b0; font-size: {TEXT_SIZE_2};">Certainty: {certainty}</p>', unsafe_allow_html=True)
             st.markdown("___")
             
             ############################################################################################
@@ -351,32 +361,33 @@ if (not camera_on) or (picture is not None):
                 st.image(heated_image, width=400)
 
 
-            
+            left_cat_col, right_cat_col = st.columns(2)
             ############################################################################################
             # SHOW ALLERGENS
             ############################################################################################
-            
-            st.subheader("Be aware, as it may contain following **allergens**:")
-            al_cols = ["","","","","","","","",""]
-            al_cols[0], al_cols[1], al_cols[2], al_cols[3], al_cols[4], al_cols[5], al_cols[6], al_cols[7], al_cols[8] = st.columns(len(al_cols))
+            st.markdown(f'<p style="color:Black; font-size: {TEXT_SIZE_BLOCK};">It may contain following <b style="color:Black; font-size: {TEXT_SIZE_BLOCK};">allergens</b>:</p>', unsafe_allow_html=True)
+            al_cols = ["","","","","","",""]
+            al_cols[0], al_cols[1], al_cols[2], al_cols[3], al_cols[4], al_cols[5], al_cols[6] = st.columns(len(al_cols))
             allergens = str(data_df.at[int(np.argmax(pred_l2, axis = -1)), 'all_allergens']).split(",")
             allergens = [val.strip() for val in allergens]
             for itr in range(len(allergens)):
                 with al_cols[itr]:
-                    st.write(f":red[**{allergens[itr]}**]")
-                    st.image('./images/icons/' + str(allergens[itr]) + '.svg')
+                    st.markdown(f'<p style="color:Red; font-size: {TEXT_SIZE_ICONS};"><b>{allergens[itr]}<b></p>', unsafe_allow_html=True)
+                    st.image('./images/icons/' + str(allergens[itr]) + '.svg', width=50)
               
             st.markdown("___")
 
             ############################################################################################
             # SHOW DIETARY CAT.
             ############################################################################################
-            if str(data_df.at[int(np.argmax(pred_l2, axis = -1)), 'dietary_status']) == 'Non-Vegetarian':
-                st.subheader(f"Dietary category - {str(data_df.at[int(np.argmax(pred_l2, axis = -1)), 'dietary_status'])}")
+            st.markdown(f'<p style="color:Black; font-size: {TEXT_SIZE_BLOCK};">Dietary category:</p>', unsafe_allow_html=True)
+            status = str(data_df.at[int(np.argmax(pred_l2, axis = -1)), 'dietary_status'])
+            
+            if status == 'Non-Vegetarian':
+                st.markdown(f'<p style="color:Red; font-size: {TEXT_SIZE_ICONS};"><b>{status}<b></p>', unsafe_allow_html=True)
             else:
-                st.subheader(f"Dietary category:")
-                st.write(f":green[**{str(data_df.at[int(np.argmax(pred_l2, axis = -1)), 'dietary_status'])}**]")
-                st.image('./images/icons/' + str(data_df.at[int(np.argmax(pred_l2, axis = -1)), 'dietary_status']) + '.svg')
+                st.markdown(f'<p style="color:#50b432; font-size: {TEXT_SIZE_ICONS};"><b>{status}<b></p>', unsafe_allow_html=True)
+                st.image('./images/icons/' + str(status) + '.svg', width=55)
 
 
 
@@ -384,14 +395,19 @@ if (not camera_on) or (picture is not None):
             ############################################################################################
             # SHOW TABS - Components, Pie chart
             ############################################################################################
-            tab1, tab2 = st.tabs(["Ingredients", "Nutrition"])
+            tab1, tab2 = st.tabs(["**Ingredients**", "**Nutrition**"])
+            main_ing = data_df.at[int(np.argmax(pred_l2, axis = -1)), 'classic_recipe'].replace("Time:","\n\rCooking time, ca.:").replace(';','')
+            optional_ing = data_df.at[int(np.argmax(pred_l2, axis = -1)), 'optional_ingredients']
             with tab1:
-                st.subheader("Main ingredients:")
-                st.write(data_df.at[int(np.argmax(pred_l2, axis = -1)), 'classic_recipe'].replace("Time:","Cooking time, ca.:"))
-                st.subheader("Optional ingredients")
-                st.write(data_df.at[int(np.argmax(pred_l2, axis = -1)), 'optional_ingredients'])
+                st.markdown(f'<p style="color:#50b432; font-size: {TEXT_SIZE_1};"><b>Main ingredients:</b></p>', unsafe_allow_html=True)
+                st.markdown(f'<p style="color:Black; font-size: {TEXT_SIZE_1};">{main_ing}</p>', unsafe_allow_html=True)
+
+                st.markdown(f'<p style="color:#058dc7; font-size: {TEXT_SIZE_1};"><b>Optional ingredients:</b></p>', unsafe_allow_html=True)
+                st.markdown(f'<p style="color:Black; font-size: {TEXT_SIZE_1};">{optional_ing}</p>', unsafe_allow_html=True)
+
             with tab2:
-                st.subheader(f"{data_df.at[int(np.argmax(pred_l2, axis = -1)), 'nutrients_per_100g']} per 100g")
+                nutrients = data_df.at[int(np.argmax(pred_l2, axis = -1)), 'nutrients_per_100g']
+                st.markdown(f'<p style="color:Black; font-size: {TEXT_SIZE_1};"><b>{nutrients} per 100g</b></p>', unsafe_allow_html=True)
                 nutr_df = data_df[['proteins','fats','carbs']].iloc[int(np.argmax(pred_l2, axis = -1))].apply(lambda x: x.split("g")[0])
                 pie_data = [int(nutr_df.proteins),  int(nutr_df.fats), int(nutr_df.carbs)]
                 labels = ['Proteins', 'Fats', 'Carbs']
@@ -399,6 +415,7 @@ if (not camera_on) or (picture is not None):
                             'Fats': '#ffd962',
                             'Carbs': '#7ca5f9'}
                 fig, ax = plt.subplots()
+                fig.set_size_inches(6, 6)
                 ax.pie(pie_data, explode=(0.1, 0, 0), labels=labels, autopct='%1.1f%%',shadow=True, startangle=90, colors=[colours[key] for key in labels])
                 ax.axis('equal')  
                 st.pyplot(fig)
@@ -409,14 +426,14 @@ if (not camera_on) or (picture is not None):
             # OTHER TOP 4 PROBABILITIES
             ############################################################################################
             st.markdown("___")
-            with st.expander("It may also be..."):
+            with st.expander("**It may also be...**"):
                 for itr in range(5):
                     probable_labels.append( str(data_df.at[int(np.argmax(pred_l2, axis = -1)), 'dish_name']).replace("['","").replace("']","").replace("_"," ").upper() )
                     probable_cert.append(pred_l2.max()*100)
                     pred_l2 = np.delete(pred_l2, np.argmax(pred_l2))
                     if itr >0:
-                        st.write(f"{itr}. {probable_labels[itr].upper()}, certainty: {probable_cert[itr].round(2)}%")
-
+                        #st.write(f"{itr}. {probable_labels[itr].upper()}, certainty: {probable_cert[itr].round(2)}%")
+                        st.markdown(f'<p style="color:Black; font-size: {TEXT_SIZE_1};">{probable_labels[itr].upper()}, certainty: <b style="color:Red; font-size: {TEXT_SIZE_1};">{probable_cert[itr].round(2)}%</b></p>', unsafe_allow_html=True)
 
             
             
@@ -427,7 +444,7 @@ if (not camera_on) or (picture is not None):
         # IF FORCE FLAG TRIGGERED, BUT IT'S NOT A FOOD
         ############################################################################################
         elif (force_heatmap) and (l1_label=='Non-Food'):
-            st.write(f"Since you insist...")
+            st.markdown(f'<p style="color:Black; font-size: {TEXT_SIZE_1};">Since you insist...</p>', unsafe_allow_html=True)
             ############################################################################################
             # 5.3 LAYER 2 PREDICT
             ############################################################################################
@@ -436,17 +453,23 @@ if (not camera_on) or (picture is not None):
             l2_prob = pred_l2.max()
             l2_label = str(l2_label).replace("['","").replace("']","").replace("_"," ").upper()
             if (l2_prob.round(2) >=90):
-                st.write(f"I can bet it is :red[**{l2_label}**]! {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} \r Certainty {str(l2_prob.round(2))}%")
+                st.markdown(f'<p style="color:Black; font-size: {TEXT_SIZE_1};">I can bet it is <b style="color:Red; font-size: {TEXT_SIZE_1};">{l2_label}</b>!&ensp;{flags}</p>', unsafe_allow_html=True)
+                st.markdown(f'<p style="color:#b0b0b0; font-size: {TEXT_SIZE_2};">Certainty: {certainty}</p>', unsafe_allow_html=True)
             elif (l2_prob.round(2) < 90) and (l2_prob.round(2) >= 75):
-                st.write(f"I pretty much sure it is :red[**{l2_label}**]. {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} \r Certainty {str(l2_prob.round(2))}%")
+                st.markdown(f'<p style="color:Black; font-size: {TEXT_SIZE_1};">I pretty much sure it is <b style="color:Red; font-size: {TEXT_SIZE_1};">{l2_label}</b>!&ensp;{flags}</p>', unsafe_allow_html=True)
+                st.markdown(f'<p style="color:#b0b0b0; font-size: {TEXT_SIZE_2};">Certainty: {certainty}</p>', unsafe_allow_html=True)
             elif (l2_prob.round(2) <75) and (l2_prob.round(2) >=55):
-                st.write(f"I tend to believe it is :red[**{l2_label}**]. {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} \r Certainty {str(l2_prob.round(2))}%")
+                st.markdown(f'<p style="color:Black; font-size: {TEXT_SIZE_1};">I tend to believe it is <b style="color:Red; font-size: {TEXT_SIZE_1};">{l2_label}</b>.&ensp;{flags}</p>', unsafe_allow_html=True)
+                st.markdown(f'<p style="color:#b0b0b0; font-size: {TEXT_SIZE_2};">Certainty: {certainty}</p>', unsafe_allow_html=True)
             elif (l2_prob.round(2) <55) and (l2_prob.round(2) >=35):
-                st.write(f"I'd guess it is :red[**{l2_label}**]. {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} \r Certainty {str(l2_prob.round(2))}%")
+                st.markdown(f'<p style="color:Black; font-size: {TEXT_SIZE_1};">I\'d guess it is <b style="color:Red; font-size: {TEXT_SIZE_1};">{l2_label}</b>.&ensp;{flags}</p>', unsafe_allow_html=True)
+                st.markdown(f'<p style="color:#b0b0b0; font-size: {TEXT_SIZE_2};">Certainty: {certainty}</p>', unsafe_allow_html=True)
             elif (l2_prob.round(2) <35) and (l2_prob.round(2) >=15):
-                st.write(f"Oh, this one is tough! Perhaps :red[**{l2_label}**]? {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} \r Certainty {str(l2_prob.round(2))}%")
+                st.markdown(f'<p style="color:Black; font-size: {TEXT_SIZE_1};">Oh, this one is tough! Perhaps, <b style="color:Red; font-size: {TEXT_SIZE_1};">{l2_label}</b>?&ensp;{flags}</p>', unsafe_allow_html=True)
+                st.markdown(f'<p style="color:#b0b0b0; font-size: {TEXT_SIZE_2};">Certainty: {certainty}</p>', unsafe_allow_html=True)
             else:
-                st.write(f"Are you sure you can eat THAT? If I had to guess, I'd say it is :red[**{l2_label}**]. {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} \r Certainty {str(l2_prob.round(2))}%")
+                st.markdown(f'<p style="color:Black; font-size: {TEXT_SIZE_1};">If I had to guess, I\'d say it is <b style="color:Red; font-size: {TEXT_SIZE_1};">{l2_label}</b>...&ensp;{flags}</p>', unsafe_allow_html=True)
+                st.markdown(f'<p style="color:#b0b0b0; font-size: {TEXT_SIZE_2};">Certainty: {certainty}</p>', unsafe_allow_html=True)
             ############################################################################################
             # 4. IMAGE and GRADCAM HEATMAP SHOW
             ############################################################################################
