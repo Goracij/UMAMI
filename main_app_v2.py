@@ -319,17 +319,27 @@ if (not camera_on) or (picture is not None):
             l2_prob = pred_l2.max() * 100
             l2_label = str(l2_label).replace("['","").replace("']","").replace("_"," ").upper()
             if (l2_prob.round(2) >=90):
-                st.write(f"I can bet it is :orange[**{l2_label}**]! {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} (certainty {str(l2_prob.round(2))}%)")
+                st.write(f"I can bet it is :red[**{l2_label}**]! {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} \r Certainty {str(l2_prob.round(2))}%")
             elif (l2_prob.round(2) < 90) and (l2_prob.round(2) >= 75):
-                st.write(f"I pretty much sure it is :orange[**{l2_label}**]. {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} (certainty {str(l2_prob.round(2))}%)")
+                st.write(f"I pretty much sure it is :red[**{l2_label}**]. {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} \r Certainty {str(l2_prob.round(2))}%")
             elif (l2_prob.round(2) <75) and (l2_prob.round(2) >=55):
-                st.write(f"I tend to believe it is :orange[**{l2_label}**]. {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} (certainty {str(l2_prob.round(2))}%)")
+                st.write(f"I tend to believe it is :red[**{l2_label}**]. {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} \r Certainty {str(l2_prob.round(2))}%")
             elif (l2_prob.round(2) <55) and (l2_prob.round(2) >=35):
-                st.write(f"I'd guess it is :orange[**{l2_label}**]. {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} (certainty {str(l2_prob.round(2))}%)")
+                st.write(f"I'd guess it is :red[**{l2_label}**]. {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} \r Certainty {str(l2_prob.round(2))}%")
             elif (l2_prob.round(2) <35) and (l2_prob.round(2) >=15):
-                st.write(f"Oh, this one is tough! Perhaps, :orange[**{l2_label}**]? {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} (certainty {str(l2_prob.round(2))}%)")
+                st.write(f"Oh, this one is tough! Perhaps, :red[**{l2_label}**]? {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} \r Certainty {str(l2_prob.round(2))}%")
             else:
-                st.write(f"If I had to guess, I'd say it is :orange[**{l2_label}**]. Are you sure you can eat THAT? {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} (certainty {str(l2_prob.round(2))}%)")
+                st.write(f"If I had to guess, I'd say it is :red[**{l2_label}**]. Are you sure you can eat THAT? {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} \r Certainty {str(l2_prob.round(2))}%")
+                st.markdown(
+                    f"""
+                    <div style="text-align: center; font-size: 28px; font-weight: bold; color: #2E8B57;">
+                        {l2_label} {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']}: {l2_prob.round(2):.2f}
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                    )
+            st.markdown("___")
+            
             ############################################################################################
             # 4. IMAGE and GRADCAM HEATMAP SHOW
             ############################################################################################
@@ -346,18 +356,20 @@ if (not camera_on) or (picture is not None):
             # SHOW ALLERGENS
             ############################################################################################
             
-            st.subheader("Be aware, as it may contain:")
+            st.subheader("Be aware, as it may contain following **allergens**:")
             al_cols = ["","","","","","","","",""]
             al_cols[0], al_cols[1], al_cols[2], al_cols[3], al_cols[4], al_cols[5], al_cols[6], al_cols[7], al_cols[8] = st.columns(len(al_cols))
             allergens = str(data_df.at[int(np.argmax(pred_l2, axis = -1)), 'all_allergens']).split(",")
             allergens = [val.strip() for val in allergens]
             for itr in range(len(allergens)):
                 with al_cols[itr]:
-                    st.write(f":orange[**{allergens[itr]}**]")
+                    st.write(f":red[**{allergens[itr]}**]")
                     st.image('./images/icons/' + str(allergens[itr]) + '.svg')
-            
+              
+            st.markdown("___")
+
             ############################################################################################
-            # SHOW DIETARY CATEGORIES
+            # SHOW DIETARY CAT.
             ############################################################################################
             if str(data_df.at[int(np.argmax(pred_l2, axis = -1)), 'dietary_status']) == 'Non-Vegetarian':
                 st.subheader(f"Dietary category - {str(data_df.at[int(np.argmax(pred_l2, axis = -1)), 'dietary_status'])}")
@@ -367,6 +379,8 @@ if (not camera_on) or (picture is not None):
                 st.image('./images/icons/' + str(data_df.at[int(np.argmax(pred_l2, axis = -1)), 'dietary_status']) + '.svg')
 
 
+
+            st.markdown("___")            
             ############################################################################################
             # SHOW TABS - Components, Pie chart
             ############################################################################################
@@ -422,17 +436,17 @@ if (not camera_on) or (picture is not None):
             l2_prob = pred_l2.max()
             l2_label = str(l2_label).replace("['","").replace("']","").replace("_"," ").upper()
             if (l2_prob.round(2) >=90):
-                st.write(f"I can bet it is :orange[**{l2_label}**]! {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} (certainty {str(l2_prob.round(2))}%)")
+                st.write(f"I can bet it is :red[**{l2_label}**]! {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} \r Certainty {str(l2_prob.round(2))}%")
             elif (l2_prob.round(2) < 90) and (l2_prob.round(2) >= 75):
-                st.write(f"I pretty much sure it is :orange[**{l2_label}**]. {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} (certainty {str(l2_prob.round(2))}%)")
+                st.write(f"I pretty much sure it is :red[**{l2_label}**]. {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} \r Certainty {str(l2_prob.round(2))}%")
             elif (l2_prob.round(2) <75) and (l2_prob.round(2) >=55):
-                st.write(f"I tend to believe it is :orange[**{l2_label}**]. {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} (certainty {str(l2_prob.round(2))}%)")
+                st.write(f"I tend to believe it is :red[**{l2_label}**]. {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} \r Certainty {str(l2_prob.round(2))}%")
             elif (l2_prob.round(2) <55) and (l2_prob.round(2) >=35):
-                st.write(f"I'd guess it is :orange[**{l2_label}**]. {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} (certainty {str(l2_prob.round(2))}%)")
+                st.write(f"I'd guess it is :red[**{l2_label}**]. {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} \r Certainty {str(l2_prob.round(2))}%")
             elif (l2_prob.round(2) <35) and (l2_prob.round(2) >=15):
-                st.write(f"Oh, this one is tough! Perhaps :orange[**{l2_label}**]? {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} (certainty {str(l2_prob.round(2))}%)")
+                st.write(f"Oh, this one is tough! Perhaps :red[**{l2_label}**]? {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} \r Certainty {str(l2_prob.round(2))}%")
             else:
-                st.write(f"Are you sure you can eat THAT? If I had to guess, I'd say it is :orange[**{l2_label}**]. {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} (certainty {str(l2_prob.round(2) * 100)}%)")
+                st.write(f"Are you sure you can eat THAT? If I had to guess, I'd say it is :red[**{l2_label}**]. {data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']} \r Certainty {str(l2_prob.round(2))}%")
             ############################################################################################
             # 4. IMAGE and GRADCAM HEATMAP SHOW
             ############################################################################################
