@@ -235,15 +235,15 @@ force_heatmap = st.sidebar.checkbox('Force GradCAM output.', value=False, key=No
 ############################################################################################
 #  MODELS SELECTION MENU (uncomment to try - model 2 error)
 ############################################################################################
-option_2 = st.sidebar.selectbox('Try out different models:',('Model 1', 'Model 2', 'Model 3'), index=0)
+option_2 = st.sidebar.selectbox('Try out different models:',('L2 - EfNetB3_v1a', 'L2 - EfNetB0_v1', 'L2 - EfNetB3_v1b'), index=0)
 match option_2:
-    case 'Model 1':
+    case 'L2 - EfNetB3_v1a':
         LAYER_2 = './models/final/Nadine_food-101-EfNetB3-A0.__-earlystop-E__of45-B32_softCat_v1.1b.keras'
         LAYER_2_SIZE = (300,300)
-    case 'Model 2': 
+    case 'L2 - EfNetB0_v1': 
         LAYER_2 = './models/final/6_7_final_classification101_EfficientNet.keras'
         LAYER_2_SIZE = (224,224)  
-    case 'Model 3':
+    case 'L2 - EfNetB3_v1b':
         LAYER_2 = './models/final/Nadine_food-101-EfNetB3-A0.__-earlystop-E__of45-B32_softCat_RandPreprocLays_SEEDed_v1.1d.keras'
         LAYER_2_SIZE = (300,300)
 
@@ -452,6 +452,8 @@ if (not camera_on) or (picture is not None):
             l2_label = str(data_df.at[int(np.argmax(pred_l2, axis = -1)), 'dish_name'])
             l2_prob = pred_l2.max()
             l2_label = str(l2_label).replace("['","").replace("']","").replace("_"," ").upper()
+            flags = data_df.at[int(np.argmax(pred_l2, axis = -1)), 'flags']
+            certainty = str(l2_prob.round(2)) + '%'
             if (l2_prob.round(2) >=90):
                 st.markdown(f'<p style="color:Black; font-size: {TEXT_SIZE_1};">I can bet it is <b style="color:Red; font-size: {TEXT_SIZE_1};">{l2_label}</b>!&ensp;{flags}</p>', unsafe_allow_html=True)
                 st.markdown(f'<p style="color:#b0b0b0; font-size: {TEXT_SIZE_2};">Certainty: {certainty}</p>', unsafe_allow_html=True)
