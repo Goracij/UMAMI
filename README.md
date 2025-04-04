@@ -1,5 +1,5 @@
 <p align="center">
-<img src="./images/Umami_logo_vertical.png" alt="This is the place where project logo should've being..."/>
+<img src="./images/Umami_logo_vertical.png" height=300 alt="This is the place where project logo should've being..."/>
 </p>
 # Umami - ML/DNN assisted food image recognition
 
